@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:DCTRequest xmlns:p="http://www.dhl.com" xmlns:p1="http://www.dhl.com/datatypes" xmlns:p2="http://www.dhl.com/DCTRequestdatatypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.dhl.com DCT-req.xsd ">
+    <GetQuote>
+        <Request>
+            <ServiceHeader>
+                <SiteID><%= @site_id %></SiteID>
+                <Password><%= @password %></Password>
+            </ServiceHeader>
+        </Request>
+        <From>
+            <CountryCode><%= @origin_country_code %></CountryCode>
+            <Postalcode><%= @origin_postal_code %></Postalcode>
+            <% if @origin_city_name -%><City><%= @origin_city_name %></City><% end -%>
+        </From>
+        <BkgDetails>
+            <PaymentCountryCode><%= @origin_country_code %></PaymentCountryCode>
+            <Date><%= ready_date %></Date>
+            <ReadyTime><%= ready_time(Time.now.in_time_zone(@time_zone)) %></ReadyTime>
+            <ReadyTimeGMTOffset><%= time_offset %></ReadyTimeGMTOffset>
+            <DimensionUnit>CM</DimensionUnit>
+            <WeightUnit>KG</WeightUnit>
+            <% if @package_type == "document" %>
+              <Pieces>
+                <Piece>
+                  <PieceID>1</PieceID>
+                  <PackageTypeCode>FLY</PackageTypeCode>
+                  <Weight><%= @document_weight %></Weight>
+                </Piece>
+              </Pieces>                        
+            <% end %>
+            <% if @pieces && @pieces.size > 0 %>
+              <Pieces>
+                <% @pieces.each_with_index do |piece, i| -%>              
+                  <Piece>
+                    <PieceID><%= piece.piece_id = i + 1 %></PieceID> 
+                    <% if @package_type == "document"%>
+                      <PackageTypeCode>FLY</PackageTypeCode>                    
+                    <% end %>
+                    <% if @package_type == "package"%>
+                      <% if piece.height -%>
+                        <Height><%= piece.height -%></Height>
+                      <% end -%>
+                      <% if piece.depth -%>
+                        <Depth><%= piece.depth -%></Depth>
+                      <% end -%>                    
+                      <% if piece.width -%>                    
+                        <Width><%= piece.width -%></Width>
+                      <% end -%>  
+                    <% end %>                  
+                    <% if piece.weight -%>                  
+                      <Weight><%= piece.weight -%></Weight>
+                    <% end -%>                                      
+                  </Piece>                  
+                <% end -%>                
+              </Pieces>
+            <% end -%>            
+            <% if @payment_account_number -%>
+                <PaymentAccountNumber><%= @payment_account_number %></PaymentAccountNumber>
+            <% end -%>
+            <IsDutiable><%= dutiable? %></IsDutiable>
+            <% if special_services.size > 0 -%>
+                <QtdShp>
+                    <% special_services.each do |special_service_type_code| -%>
+                        <QtdShpExChrg>
+                            <SpecialServiceType><%= special_service_type_code %></SpecialServiceType>
+                        </QtdShpExChrg>
+                     <% end -%>
+                </QtdShp>
+            <% end -%>
+            <%- if insured? %>
+                <InsuredValue><%= @insured_value %></InsuredValue>
+                <InsuredCurrency><%= @insured_currency %></InsuredCurrency>
+            <% end %>        
+        </BkgDetails>
+        <To>
+            <CountryCode><%= @destination_country_code %></CountryCode>
+            <Postalcode><%= @destination_postal_code %></Postalcode>
+            <% if @destination_city_name -%><City><%= @destination_city_name %></City><% end -%>
+        </To>
+        <%- if is_dutiable? %>
+            <Dutiable>
+                <DeclaredCurrency><%= @declared_currency %></DeclaredCurrency>
+                <DeclaredValue><%= @declared_value %></DeclaredValue>
+            </Dutiable>
+        <% end %>
+    </GetQuote>
+</p:DCTRequest>
